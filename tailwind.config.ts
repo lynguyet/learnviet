@@ -1,6 +1,6 @@
 import type { Config } from "tailwindcss";
 
-export default {
+const config: Config = {
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -9,10 +9,35 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        primary: "#00341c",      // Dark green
+        secondary: "#006034",    // Less dark green
+        tertiary: "#b4fed7",
+        "secondary-dark": "#e5e7eb",
+        "primary-light": "#1e40af",
+        "lime-green": "#d8ffeb",
+        
+        success: {
+          DEFAULT: '#207C29',   // Green
+          light: '#25922F',     // Lighter version
+          dark: '#1B6623',      // Darker version
+        },
+        error: {
+          DEFAULT: '#C81212',   // Red
+          light: '#E01515',     // Lighter version
+          dark: '#A80F0F',      // Darker version
+        },
+        
+        
+      },
+      rotate: {
+        'y-180': 'rotateY(180deg)',
+      },
+      perspective: {
+        '1000': '1000px',
       },
     },
   },
   plugins: [],
-} satisfies Config;
+};
+
+export default config;
