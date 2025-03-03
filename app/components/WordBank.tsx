@@ -5,6 +5,7 @@ import { WordEntry } from '@/lib/types';
 import PracticeMode from '@/app/components/PracticeMode';
 import { ButtonHTMLAttributes } from 'react';
 
+// Inline Button component
 function Button({ 
   children, 
   className = '', 
