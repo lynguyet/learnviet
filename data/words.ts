@@ -86,3 +86,32 @@ export async function getWordsData(): Promise<WordEntry[]> {
     return fallbackWords;
   }
 }
+
+export interface Word {
+  id: number;
+  vietnamese: string;
+  english: string;
+  pronunciation: string;
+}
+
+export const words: Word[] = [
+  {
+    id: 1,
+    vietnamese: "xin chào",
+    english: "hello",
+    pronunciation: "sin chow"
+  },
+  {
+    id: 2,
+    vietnamese: "cảm ơn",
+    english: "thank you",
+    pronunciation: "gam un"
+  },
+  {
+    id: 3,
+    vietnamese: "tạm biệt",
+    english: "goodbye",
+    pronunciation: "tam bee yet"
+  },
+  // Add more words as needed
+];
