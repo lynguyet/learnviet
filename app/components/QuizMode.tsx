@@ -1,6 +1,31 @@
 'use client';
 import { useState } from 'react';
-import { words, Word } from '@/data/words';
+
+interface Word {
+  id: number;
+  vietnamese: string;
+  english: string;
+  pronunciation: string;
+  example?: string;
+}
+
+const words: Word[] = [
+  {
+    id: 1,
+    vietnamese: "xin chào",
+    english: "hello",
+    pronunciation: "sin chow",
+    example: "Xin chào bạn!"
+  },
+  {
+    id: 2,
+    vietnamese: "cảm ơn",
+    english: "thank you",
+    pronunciation: "gam un",
+    example: "Cảm ơn nhiều!"
+  },
+  // ... more words
+];
 
 export default function QuizMode() {
   const [currentWord, setCurrentWord] = useState<Word | null>(null);
