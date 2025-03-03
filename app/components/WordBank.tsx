@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { WordEntry } from '@/lib/types';
-import PracticeMode from '@/app/components/PracticeMode';
+import PracticeMode from './PracticeMode';
 import { ButtonHTMLAttributes } from 'react';
 
 // Inline Button component
