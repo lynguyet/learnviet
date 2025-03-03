@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import Button from './Button';
+import Button from '@/app/components/Button';
 
 // Add proper type declarations
 declare global {
