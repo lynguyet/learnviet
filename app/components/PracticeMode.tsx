@@ -30,12 +30,23 @@ function Button({
 declare global {
   interface Window {
     webkitSpeechRecognition: any;
+    SpeechRecognition: any;
   }
 }
 
 interface SpeechRecognitionErrorEvent extends Event {
   error: string;
   message: string;
+}
+
+interface SpeechRecognitionEvent extends Event {
+  results: {
+    [key: number]: {
+      [key: number]: {
+        transcript: string;
+      };
+    };
+  };
 }
 
 interface SpeechRecognition extends EventTarget {
