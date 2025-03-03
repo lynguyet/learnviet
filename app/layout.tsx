@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { DM_Serif_Display, Be_Vietnam_Pro } from 'next/font/google'
 
