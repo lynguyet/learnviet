@@ -10,15 +10,15 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   className?: string;
 }
 
-export default function Button({
+const Button = ({ 
+  children, 
+  className = '', 
   variant = 'primary',
   size = 'md',
-  children,
-  className,
-  ...props
-}: ButtonProps) {
+  ...props 
+}: ButtonProps) => {
   return (
-    <button 
+    <button
       className={twMerge(
         'rounded-full font-medium transition-colors duration-200',
         variant === 'primary' ? 'bg-primary text-white hover:bg-primary/80' : '',
@@ -35,4 +35,6 @@ export default function Button({
       {children}
     </button>
   );
-}
+};
+
+export default Button;

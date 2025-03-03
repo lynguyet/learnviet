@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import Button from './Button';
+import Button from './Button.tsx';
 
 // Add proper type declarations
 declare global {

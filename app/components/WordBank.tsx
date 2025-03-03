@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { WordEntry } from '@/lib/types';
 import PracticeMode from './PracticeMode';
-import Button from './Button';
+import Button from './Button.tsx';
 
 export default function WordBank() {
   const [selectedGrade, setSelectedGrade] = useState<string | null>(null);
