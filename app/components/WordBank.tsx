@@ -12,14 +12,16 @@ function Button({
   variant = 'primary',
   ...props 
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: 'primary' | 'secondary';
+  variant?: 'primary' | 'secondary' | 'outline';
 }) {
   return (
     <button
       className={`${className} ${
         variant === 'primary' 
-          ? 'bg-blue-500 text-white' 
-          : 'bg-gray-200 text-gray-800'
+          ? 'bg-blue-500 text-white hover:bg-blue-600'
+          : variant === 'outline'
+          ? 'border border-blue-500 text-blue-500 hover:bg-blue-50'
+          : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
       } px-4 py-2 rounded`}
       {...props}
     >
