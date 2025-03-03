@@ -118,10 +118,16 @@ export default function WordBank() {
       {/* Word cards grid */}
       {filteredWords.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredWords.map((word) => (
-            <div key={`${word.id}-${word.vietnamese}`} className="p-6 bg-white rounded-lg shadow-sm border border-white">
+          {filteredWords.map((word, index) => (
+            <div 
+              key={`${word.vietnamese}-${index}`} 
+              className="p-6 bg-white rounded-lg shadow-sm border border-white"
+            >
               <div className="flex gap-2 mb-4">
-                <span key={`${word.id}-${word.grade}`} className="text-sm px-3 py-1 bg-lime-green rounded-full">
+                <span 
+                  key={`${word.vietnamese}-${word.grade}-${index}`} 
+                  className="text-sm px-3 py-1 bg-lime-green rounded-full"
+                >
                   {word.grade}
                 </span>
                 <span className="text-sm px-3 py-1 bg-lime-green rounded-full">

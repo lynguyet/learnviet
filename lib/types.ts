@@ -1,4 +1,5 @@
 export interface WordEntry {
+  id: string;
   title: string;
   vietnamese: string;
   english: string;
