@@ -2,16 +2,6 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { DM_Serif_Display, Be_Vietnam_Pro } from 'next/font/google'
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 const dmSerif = DM_Serif_Display({
   weight: '400',
   subsets: ['latin'],
@@ -36,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${dmSerif.variable} ${beVietnamPro.variable} antialiased`}>
+    <html lang="en" className={`${dmSerif.variable} ${beVietnamPro.variable} antialiased`}>
       <body className={`${beVietnamPro.className} min-h-screen bg-[#f6f6ea80]`}>
         {children}
       </body>
