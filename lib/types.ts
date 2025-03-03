@@ -10,4 +10,5 @@ export interface Word {
   vietnamese: string;
   english: string;
   pronunciation: string;
+  example?: string;
 }
