@@ -3,33 +3,6 @@
 import { useState, useRef } from 'react';
 import { ButtonHTMLAttributes } from 'react';
 
-// Add proper type declarations
-declare global {
-  interface Window {
-    webkitSpeechRecognition: new () => SpeechRecognition;
-    SpeechRecognition: new () => SpeechRecognition;
-  }
-}
-
-interface SpeechRecognitionErrorEvent extends Event {
-  error: string;
-  message: string;
-}
-
-interface SpeechRecognition extends EventTarget {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  onerror: (event: SpeechRecognitionErrorEvent) => void;
-  onresult: (event: SpeechRecognitionEvent) => void;
-  start(): void;
-  stop(): void;
-}
-
-interface PracticeModeProps {
-  word: string;
-}
-
 // Add Button component inline
 function Button({ 
   children, 
@@ -53,7 +26,34 @@ function Button({
   );
 }
 
-export default function PracticeMode({ word }: PracticeModeProps) {
+// Add proper type declarations
+declare global {
+  interface Window {
+    webkitSpeechRecognition: any;
+  }
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+  message: string;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onerror: (event: SpeechRecognitionErrorEvent) => void;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  start(): void;
+  stop(): void;
+}
+
+interface PracticeModeProps {
+  text: string;
+  onRecordingComplete: (data: any) => void;
+}
+
+export default function PracticeMode({ text, onRecordingComplete }: PracticeModeProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [transcribedText, setTranscribedText] = useState('');
   const [accuracy, setAccuracy] = useState(0);
@@ -130,7 +130,7 @@ export default function PracticeMode({ word }: PracticeModeProps) {
         if (transcript.trim()) {
           setHasSpoken(true);
           setTranscribedText(transcript);
-          const accuracyScore = calculateAccuracy(transcript, word);
+          const accuracyScore = calculateAccuracy(transcript, text);
           console.log('Calculated accuracy:', accuracyScore);
           setAccuracy(accuracyScore);
           setShowEvaluation(true);
