@@ -1,7 +1,30 @@
 'use client'
 
 import { useState, useRef } from 'react';
-import { Button } from "@/components/ui/button";
+import { ButtonHTMLAttributes } from 'react';
+
+// Add Button component inline
+function Button({ 
+  children, 
+  className = '', 
+  variant = 'primary',
+  ...props 
+}: ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: 'primary' | 'secondary';
+}) {
+  return (
+    <button
+      className={`${className} ${
+        variant === 'primary' 
+          ? 'bg-blue-500 text-white' 
+          : 'bg-gray-200 text-gray-800'
+      } px-4 py-2 rounded`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
 
 interface AudioRecorderProps {
   text: string;

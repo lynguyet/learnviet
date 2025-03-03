@@ -1,6 +1,29 @@
 import Navigation from '../components/Navigation'
 import WordBank from '../components/WordBank'
-import Button from '../components/Button'
+import { ButtonHTMLAttributes } from 'react';
+
+// Add Button component inline (same as other components)
+function Button({ 
+  children, 
+  className = '', 
+  variant = 'primary',
+  ...props 
+}: ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: 'primary' | 'secondary';
+}) {
+  return (
+    <button
+      className={`${className} ${
+        variant === 'primary' 
+          ? 'bg-blue-500 text-white' 
+          : 'bg-gray-200 text-gray-800'
+      } px-4 py-2 rounded`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
 
 export default function Page() {
   return (
