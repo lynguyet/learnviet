@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import Button from './Button.tsx';
+import { ButtonHTMLAttributes } from 'react';
 
 // Add proper type declarations
 declare global {
@@ -28,6 +28,29 @@ interface SpeechRecognition extends EventTarget {
 
 interface PracticeModeProps {
   word: string;
+}
+
+// Add Button component inline
+function Button({ 
+  children, 
+  className = '', 
+  variant = 'primary',
+  ...props 
+}: ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: 'primary' | 'secondary';
+}) {
+  return (
+    <button
+      className={`${className} ${
+        variant === 'primary' 
+          ? 'bg-blue-500 text-white' 
+          : 'bg-gray-200 text-gray-800'
+      } px-4 py-2 rounded`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
 }
 
 export default function PracticeMode({ word }: PracticeModeProps) {
@@ -143,14 +166,12 @@ export default function PracticeMode({ word }: PracticeModeProps) {
       {!isRecording ? (
         <Button 
           onClick={startRecording}
-          variant="primary"
         >
           Start Recording
         </Button>
       ) : (
         <Button 
           onClick={stopRecording}
-          variant="secondary"
         >
           Stop Recording
         </Button>
