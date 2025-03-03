@@ -1,5 +1,3 @@
-import { Card, CardContent } from "@/components/ui/card";
-
 // Add Card components inline
 function Card({ children, className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
