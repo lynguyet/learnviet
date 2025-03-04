@@ -15,6 +15,7 @@
     "framer-motion": "^12.4.5",
     "google-auth-library": "^9.15.1",
     "google-spreadsheet": "^4.1.4",
+    "googleapis": "^146.0.0",
     "gray-matter": "^4.0.3",
     "next": "^15.2.0",
     "next-mdx-remote": "^5.0.0",
