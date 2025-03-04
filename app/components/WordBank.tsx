@@ -60,7 +60,7 @@ export default function WordBank() {
       } catch (err: any) {
         console.error('Error fetching words:', err);
         setError(err.message || 'Failed to load words');
-        setWords([]; // Ensure words is always an array
+        setWords([]); // Ensure words is always an array
       } finally {
         setLoading(false);
       }
