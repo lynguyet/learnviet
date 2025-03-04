@@ -1,7 +1,4 @@
-import { readFile, readdir } from 'fs/promises';
-import { join } from 'path';
-import matter from 'gray-matter';
-import { serialize } from 'next-mdx-remote/serialize';
+import { Lesson } from './types';
 
 // First, install required dependencies
 // npm install gray-matter next-mdx-remote
@@ -9,44 +6,76 @@ import { serialize } from 'next-mdx-remote/serialize';
 // Mark this file as server-side only
 export const runtime = 'nodejs';
 
-const lessonsDirectory = join(process.cwd(), 'app/content/lessons');
+type LessonWithNavigation = {
+  lesson: Lesson;  // Updated from 'any' to 'Lesson'
+  prevLesson: { slug: string; title: string } | null;
+  nextLesson: { slug: string; title: string } | null;
+};
 
-export async function getLessonBySlug(slug: string) {
+export async function getAllLessons(): Promise<Lesson[]> {
+  try {
+    const response = await fetch('/api/lessons');
+    if (!response.ok) {
+      throw new Error('Failed to fetch lessons');
+    }
+    const data: Lesson[] = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching lessons:', error instanceof Error ? error.message : 'Unknown error');
+    return [];
+  }
+}
+
+export async function getLessonBySlug(slug: string): Promise<LessonWithNavigation | null> {
   if (!slug) {
     console.error('No slug provided to getLessonBySlug');
     return null;
   }
 
   try {
-    console.log('Fetching lesson for slug:', slug);
-    const response = await fetch(`http://localhost:3000/api/lessons/${slug}`, {
+    // Get all lessons to determine prev/next
+    const allLessons = await getAllLessons();
+    const currentIndex = allLessons.findIndex(lesson => lesson.slug === slug);
+
+    if (currentIndex === -1) {
+      console.error('Lesson not found:', slug);
+      return null;
+    }
+
+    // Get the current lesson
+    const response = await fetch(`/api/lessons/${slug}`, {
       cache: 'no-store'
     });
 
     if (!response.ok) {
       console.error('Failed to fetch lesson:', response.status);
-      const errorData = await response.json();
-      console.error('Error details:', errorData);
       return null;
     }
 
-    const data = await response.json();
-    console.log('Lesson data received:', data);
-    return data;
+    const lesson = await response.json();
+
+    // Determine prev/next lessons
+    const prevLesson = currentIndex > 0 
+      ? {
+          slug: allLessons[currentIndex - 1].slug,
+          title: allLessons[currentIndex - 1].title
+        }
+      : null;
+
+    const nextLesson = currentIndex < allLessons.length - 1
+      ? {
+          slug: allLessons[currentIndex + 1].slug,
+          title: allLessons[currentIndex + 1].title
+        }
+      : null;
+
+    return {
+      lesson,
+      prevLesson,
+      nextLesson
+    };
   } catch (error) {
     console.error('Error in getLessonBySlug:', error);
     return null;
   }
-}
-
-type Lesson = {
-  slug: string;
-  title: string;
-  description: string;
-  grade: string;
-  tags: string[];
-};
-
-export async function getAllLessons(): Promise<Lesson[]> {
-  return []; // We'll implement this later
 }

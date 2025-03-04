@@ -2,24 +2,14 @@ import { NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs';
 import matter from 'gray-matter';
+import { Lesson } from '@/app/lib/types';
 
-// Update the lessons type
-interface Lesson {
-  slug: string;
-  title: string;
-  description: string;
-  grade: string;
-  tags: string[];
-  googleDocUrl?: string; // Optional Google Doc URL
-  type?: 'google-doc';
-}
-
-export async function GET() {
+export async function GET(): Promise<NextResponse<Lesson[] | { error: string }>> {
   try {
     const lessonsDirectory = path.join(process.cwd(), 'app/content/lessons');
     const files = fs.readdirSync(lessonsDirectory);
     
-    const lessons = files
+    const lessons: Lesson[] = files
       .filter(file => file.endsWith('.mdx'))
       .map((file) => {
         const slug = file.replace(/\.mdx$/, '');
@@ -34,9 +24,9 @@ export async function GET() {
           description: data.description,
           grade: data.grade,
           tags: data.tags || [],
-          googleDocUrl: data.googleDocUrl || null,
-          type: data.type || null,
-        };
+          googleDocUrl: data.googleDocUrl,
+          type: data.type as 'google-doc' | undefined,
+        } as Lesson;
       });
 
     return NextResponse.json(lessons);

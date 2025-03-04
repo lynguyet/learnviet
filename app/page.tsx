@@ -71,7 +71,7 @@ export default function Home() {
                     Library
                   </Link>
                 </motion.span>
-                {' '}section contains all the lessons we've covered in class, 
+                {' '}section contains all the lessons we&apos;ve covered in class, 
                 organized by topic for easy reference. The{' '}
                 <motion.span
                   whileHover={{ scale: 1.05 }}

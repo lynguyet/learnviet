@@ -1,37 +1,55 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { WordEntry } from '@/app/lib/types';
+import { ButtonHTMLAttributes } from 'react';
 
-interface Word {
-  id: number;
-  vietnamese: string;
-  english: string;
-  pronunciation: string;
-  example?: string;
+// Add the shared Button component
+function Button({ 
+  children, 
+  className = '', 
+  variant = 'primary',
+  ...props 
+}: ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: 'primary' | 'secondary' | 'outline';
+}) {
+  return (
+    <button
+      className={`${className} ${
+        variant === 'primary' 
+          ? 'bg-blue-500 text-white hover:bg-blue-600'
+          : variant === 'outline'
+          ? 'border border-blue-500 text-blue-500 hover:bg-blue-50'
+          : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+      } px-4 py-2 rounded`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
 }
 
-const words: Word[] = [
-  {
-    id: 1,
-    vietnamese: "xin chào",
-    english: "hello",
-    pronunciation: "sin chow",
-    example: "Xin chào bạn!"
-  },
-  {
-    id: 2,
-    vietnamese: "cảm ơn",
-    english: "thank you",
-    pronunciation: "gam un",
-    example: "Cảm ơn nhiều!"
-  },
-  // ... more words
-];
-
 export default function QuizMode() {
-  const [currentWord, setCurrentWord] = useState<Word | null>(null);
+  const [currentWord, setCurrentWord] = useState<WordEntry | null>(null);
   const [showAnswer, setShowAnswer] = useState(false);
+  const [words, setWords] = useState<WordEntry[]>([]);
+
+  // Add useEffect to fetch words from API
+  useEffect(() => {
+    const fetchWords = async () => {
+      try {
+        const response = await fetch('/api/words');
+        const data = await response.json();
+        setWords(data);
+      } catch (err) {
+        console.error('Error fetching words:', err);
+      }
+    };
+
+    fetchWords();
+  }, []);
 
   const getRandomWord = () => {
+    if (words.length === 0) return;
     const randomIndex = Math.floor(Math.random() * words.length);
     setCurrentWord(words[randomIndex]);
     setShowAnswer(false);
@@ -42,23 +60,24 @@ export default function QuizMode() {
       <h2 className="viet text-xl font-bold mb-4">Practice Quiz</h2>
       
       {!currentWord ? (
-        <button
+        <Button
           onClick={getRandomWord}
-          className="px-4 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600"
+          variant="primary"
         >
           Start Quiz
-        </button>
+        </Button>
       ) : (
         <div className="space-y-4">
           <p className="viet text-2xl font-bold">{currentWord.vietnamese}</p>
           
           {!showAnswer ? (
-            <button
+            <Button
               onClick={() => setShowAnswer(true)}
-              className="px-4 py-2 bg-green-500 text-white rounded-full hover:bg-green-600"
+              variant="primary"
+              className="bg-green-500 hover:bg-green-600"
             >
               Show Answer
-            </button>
+            </Button>
           ) : (
             <div className="space-y-2">
               <p className="text-lg">English: {currentWord.english}</p>
@@ -66,12 +85,12 @@ export default function QuizMode() {
               {currentWord.example && (
                 <p className="viet text-gray-600">Example: {currentWord.example}</p>
               )}
-              <button
+              <Button
                 onClick={getRandomWord}
-                className="px-4 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600"
+                variant="primary"
               >
                 Next Word
-              </button>
+              </Button>
             </div>
           )}
         </div>

@@ -28,52 +28,54 @@ function Button({
   );
 }
 
-// Add proper type declarations
-declare global {
-  interface Window {
-    webkitSpeechRecognition: any;
-    SpeechRecognition: any;
-  }
-}
-
-interface SpeechRecognitionErrorEvent extends Event {
-  error: string;
-  message: string;
-}
-
+// Define event interfaces
 interface SpeechRecognitionEvent extends Event {
-  results: {
-    [key: number]: {
-      [key: number]: {
-        transcript: string;
-      };
-    };
-  };
+  results: SpeechRecognitionResultList;
 }
 
-interface SpeechRecognition extends EventTarget {
+interface SpeechRecognitionResultList {
+  [index: number]: SpeechRecognitionResult;
+  length: number;
+}
+
+interface SpeechRecognitionResult {
+  [index: number]: SpeechRecognitionAlternative;
+  isFinal: boolean;
+  length: number;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+// Define our own recognition interface without global declarations
+interface MySpeechRecognition extends EventTarget {
   continuous: boolean;
   interimResults: boolean;
   lang: string;
-  onerror: (event: SpeechRecognitionErrorEvent) => void;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+  addEventListener: (type: string, callback: EventListenerOrEventListenerObject) => void;
+  removeEventListener: (type: string, callback: EventListenerOrEventListenerObject) => void;
   onresult: (event: SpeechRecognitionEvent) => void;
-  start(): void;
-  stop(): void;
+  onerror: (event: Event) => void;
+  onend: (event: Event) => void;
 }
 
+// Add prop types
 interface PracticeModeProps {
-  text: string;
-  onRecordingComplete: (data: any) => void;
+  word: string;
 }
 
-export default function PracticeMode({ text, onRecordingComplete }: PracticeModeProps) {
+export default function PracticeMode({ word }: PracticeModeProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [transcribedText, setTranscribedText] = useState('');
   const [accuracy, setAccuracy] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [showEvaluation, setShowEvaluation] = useState(false);
-  const [hasSpoken, setHasSpoken] = useState(false);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<MySpeechRecognition | null>(null);
 
   const calculateAccuracy = (transcribed: string, target: string): number => {
     if (!transcribed) {
@@ -129,10 +131,19 @@ export default function PracticeMode({ text, onRecordingComplete }: PracticeMode
     setTranscribedText('');
     setAccuracy(0);
     setShowEvaluation(false);
-    setHasSpoken(false);
     
     try {
-      const recognition = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
+      // Disable ESLint for just these lines
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const SpeechRecognitionAPI = (window as any).webkitSpeechRecognition || 
+                                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                  (window as any).SpeechRecognition;
+      
+      if (!SpeechRecognitionAPI) {
+        throw new Error("Speech recognition not supported in this browser");
+      }
+      
+      const recognition = new SpeechRecognitionAPI() as MySpeechRecognition;
       recognition.lang = 'vi-VN';
       recognition.interimResults = false;
       recognition.continuous = false;
@@ -141,9 +152,8 @@ export default function PracticeMode({ text, onRecordingComplete }: PracticeMode
         const transcript = event.results[0][0].transcript;
         console.log('Speech detected:', transcript);
         if (transcript.trim()) {
-          setHasSpoken(true);
           setTranscribedText(transcript);
-          const accuracyScore = calculateAccuracy(transcript, text);
+          const accuracyScore = calculateAccuracy(transcript, word);
           console.log('Calculated accuracy:', accuracyScore);
           setAccuracy(accuracyScore);
           setShowEvaluation(true);

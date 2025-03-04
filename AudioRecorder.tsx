@@ -3,6 +3,25 @@
 import { useState, useRef } from 'react';
 import { ButtonHTMLAttributes } from 'react';
 
+// Types from api/evaluate/route.ts
+interface EvaluationSuccess {
+  success: true;
+  score: number;
+  feedback: string;
+  details: {
+    text: string;
+    audioReceived: boolean;
+    audioSize: number;
+  };
+}
+
+interface EvaluationError {
+  error: string;
+  details?: string;
+}
+
+type EvaluationResponse = EvaluationSuccess | EvaluationError;
+
 // Add Button component inline
 function Button({ 
   children, 
@@ -28,7 +47,7 @@ function Button({
 
 interface AudioRecorderProps {
   text: string;
-  onRecordingComplete: (data: any) => void;
+  onRecordingComplete: (data: EvaluationResponse) => void;
 }
 
 export default function AudioRecorder({ text, onRecordingComplete }: AudioRecorderProps) {
@@ -56,7 +75,7 @@ export default function AudioRecorder({ text, onRecordingComplete }: AudioRecord
 
           try {
             setStatus('Processing...');
-            const response = await fetch('http://localhost:5000/evaluate-pronunciation', {
+            const response = await fetch('/api/evaluate', {
               method: 'POST',
               body: formData
             });

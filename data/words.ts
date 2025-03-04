@@ -1,5 +1,5 @@
-import { WordEntry } from '../types';
-import { getWords } from '../lib/sheets';
+import { WordEntry } from '@/lib/types';
+import { getWords } from '@/lib/sheets';
 
 // Fallback data in case the sheet fetch fails
 export const fallbackWords: WordEntry[] = [
@@ -87,14 +87,8 @@ export async function getWordsData(): Promise<WordEntry[]> {
   }
 }
 
-export interface Word {
-  id: number;
-  vietnamese: string;
-  english: string;
-  pronunciation: string;
-}
-
-export const words: Word[] = [
+// Consider removing this if not used
+export const words: WordEntry[] = [
   {
     id: 1,
     vietnamese: "xin chào",

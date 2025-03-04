@@ -1,11 +1,13 @@
-import React from 'react';
 import { MDXRemote } from 'next-mdx-remote/rsc';
-import { notFound } from 'next/navigation';
-import { getLessonBySlug } from '../../lib/mdx';
+import { getLessonBySlug } from '@/app/lib/mdx';
 import Navigation from '../../components/Navigation';
+import { LessonNavigation } from '../../components/LessonNavigation';
 import { Section } from '../../components/mdx/Section';
 import { Example } from '../../components/mdx/Example';
 import { ExampleBlock } from '../../components/mdx/ExampleBlock';
+import { notFound } from 'next/navigation';
+import { Metadata } from 'next';
+import { LessonWithNavigation } from '@/app/lib/types';
 
 const components = {
   Section,
@@ -13,16 +15,16 @@ const components = {
   ExampleBlock,
 };
 
-export default async function LessonPage({ 
-  params 
-}: { 
-  params: { slug: string } 
-}) {
-  const lesson = await getLessonBySlug(params.slug);
+export default async function LessonPage({ params }: any) {
+  const { slug } = params;
   
-  if (!lesson) {
+  const lessonWithNavigation = await getLessonBySlug(slug) as LessonWithNavigation | null;
+
+  if (!lessonWithNavigation) {
     notFound();
   }
+
+  const { lesson, prevLesson, nextLesson } = lessonWithNavigation;
 
   return (
     <div className="min-h-screen">
@@ -63,24 +65,30 @@ export default async function LessonPage({
             components={components}
           />
         </article>
+
+        {/* Add Lesson Navigation */}
+        <div className="max-w-3xl mx-auto">
+          <LessonNavigation 
+            prevLesson={prevLesson}
+            nextLesson={nextLesson}
+          />
+        </div>
       </main>
     </div>
   );
 }
 
-// Add metadata
-export async function generateMetadata({ 
-  params 
-}: { 
-  params: { slug: string } 
-}) {
-  const lesson = await getLessonBySlug(params.slug);
+export async function generateMetadata({ params }: any): Promise<Metadata> {
+  const { slug } = params;
+  const lessonWithNavigation = await getLessonBySlug(slug) as LessonWithNavigation | null;
   
-  if (!lesson) {
+  if (!lessonWithNavigation) {
     return {
       title: 'Lesson Not Found',
     };
   }
+
+  const { lesson } = lessonWithNavigation;
 
   return {
     title: `${lesson.frontMatter.title} | LearnViet`,

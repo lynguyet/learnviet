@@ -1,12 +1,6 @@
 import { GoogleSpreadsheet, GoogleSpreadsheetRow } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
-
-interface WordEntry {
-  title: string;
-  vietnamese: string;
-  english: string;
-  grade: string;
-}
+import { WordEntry } from '@/lib/types';
 
 const SCOPES = [
   'https://www.googleapis.com/auth/spreadsheets',
@@ -31,7 +25,8 @@ async function getSheetData(): Promise<WordEntry[]> {
     const sheet = doc.sheetsByIndex[0];
     const rows = await sheet.getRows();
 
-    return rows.map((row: GoogleSpreadsheetRow) => ({
+    return rows.map((row: GoogleSpreadsheetRow, index: number) => ({
+      id: `${index + 1}`,
       title: row.get('Title') || '',
       vietnamese: row.get('Vietnamese') || '',
       english: row.get('English') || '',
@@ -44,4 +39,3 @@ async function getSheetData(): Promise<WordEntry[]> {
 }
 
 export { getSheetData };
-export type { WordEntry };

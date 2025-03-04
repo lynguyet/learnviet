@@ -1,8 +1,9 @@
 import { getSheetData } from '../../../lib/sheets';
 import { NextResponse } from 'next/server';
+import { WordEntry } from './types';
 
 // This function handles GET requests to /api/words
-export async function GET() {
+export async function GET(): Promise<NextResponse<WordEntry[] | { error: string }>> {
   try {
     const words = await getSheetData();
     return NextResponse.json(words);

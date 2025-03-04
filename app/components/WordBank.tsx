@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { WordEntry } from '@/lib/types';
+import { WordEntry } from '@/app/lib/types';
 import PracticeMode from './PracticeMode';
 import { ButtonHTMLAttributes } from 'react';
 

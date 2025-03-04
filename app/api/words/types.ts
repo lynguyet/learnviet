@@ -1,6 +1,7 @@
 export interface WordEntry {
-  title: string;
+  id: string;
   vietnamese: string;
   english: string;
-  grade: string;
+  partOfSpeech?: string;
+  examples?: string[];
 }

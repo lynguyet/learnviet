@@ -1,41 +1,26 @@
 import { NextResponse } from 'next/server';
-import path from 'path';
-import fs from 'fs';
-import matter from 'gray-matter';
+import { getLessonBySlug } from '@/app/lib/mdx';
 
 export async function GET(
-  request: Request,
-  { params }: { params: { slug: string } }
-) {
+  request: Request
+): Promise<NextResponse> {
   try {
-    // Log the slug we receive
-    console.log('Received slug:', params.slug);
+    const url = new URL(request.url);
+    const slug = url.pathname.split('/').pop();
 
-    const lessonPath = path.join(process.cwd(), 'app/content/lessons', `${params.slug}.mdx`);
-    console.log('Looking for lesson at:', lessonPath);
+    if (!slug) {
+      return NextResponse.json({ error: 'Slug not provided' }, { status: 400 });
+    }
 
-    // Check if file exists
-    if (!fs.existsSync(lessonPath)) {
-      console.log('File not found:', lessonPath);
+    const lessonWithNavigation = await getLessonBySlug(slug);
+
+    if (!lessonWithNavigation) {
       return NextResponse.json({ error: 'Lesson not found' }, { status: 404 });
     }
 
-    // Read and parse the file
-    const fileContents = fs.readFileSync(lessonPath, 'utf8');
-    const { data, content } = matter(fileContents);
-
-    // Return the lesson data
-    return NextResponse.json({
-      slug: params.slug,
-      frontMatter: data,
-      content: content
-    });
-
+    return NextResponse.json(lessonWithNavigation);
   } catch (error) {
-    console.error('Error:', error);
-    return NextResponse.json({ 
-      error: 'Failed to load lesson',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    console.error('Error fetching lesson:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
