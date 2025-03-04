@@ -31,50 +31,61 @@ function Button({
 }
 
 export default function WordBank() {
-  const [selectedGrade, setSelectedGrade] = useState<string | null>(null);
   const [words, setWords] = useState<WordEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  const [selectedWord, setSelectedWord] = useState<WordEntry | null>(null);
+  const [selectedGrade, setSelectedGrade] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState('');
+  
   useEffect(() => {
-    const fetchWords = async () => {
+    async function fetchWords() {
       try {
-        console.log('Fetching words...');  // Debug log
         const response = await fetch('/api/words');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch words: ${response.status}`);
+        }
         const data = await response.json();
-        console.log('Received words:', data);  // Debug log
-        setWords(data);
-      } catch (err) {
+        
+        // Handle both possible data formats
+        const wordsArray = Array.isArray(data) ? data : (data.words || []);
+        
+        // Ensure we have a valid array of words
+        if (!Array.isArray(wordsArray)) {
+          console.error('Expected array of words but got:', wordsArray);
+          setWords([]);
+        } else {
+          setWords(wordsArray);
+        }
+      } catch (err: any) {
         console.error('Error fetching words:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch words');
+        setError(err.message || 'Failed to load words');
+        setWords([]; // Ensure words is always an array
       } finally {
         setLoading(false);
       }
-    };
-
+    }
+    
     fetchWords();
   }, []);
-
-  console.log('Current state:', { words, loading, selectedGrade });  // Debug log
-
-  const filteredWords = words.filter(word => 
-    !selectedGrade || word.grade.includes(selectedGrade)
-  );
+  
+  // Defensive filter - ensure words is an array before filtering
+  const filteredWords = Array.isArray(words) ? words.filter(word => 
+    (!selectedGrade || (word.grade && word.grade.includes(selectedGrade))) &&
+    (searchTerm === '' || 
+     (word.vietnamese && word.vietnamese.toLowerCase().includes(searchTerm.toLowerCase())) ||
+     (word.english && word.english.toLowerCase().includes(searchTerm.toLowerCase())))
+  ) : [];
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-[200px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-      </div>
-    );
+    return <div className="text-center py-10">Loading words...</div>;
   }
-
+  
   if (error) {
     return (
-      <div className="text-center p-4 text-red-600">
-        <p>Error: {error}</p>
+      <div className="text-center py-10">
+        <p className="text-red-500">{error}</p>
         <Button 
-          variant="secondary" 
           onClick={() => window.location.reload()}
           className="mt-4"
         >
@@ -83,74 +94,106 @@ export default function WordBank() {
       </div>
     );
   }
-
-  return (
-    <div className="max-w-7xl mx-auto">
-      {/* Grade filters */}
-      <div className="mb-8">
-        <div className="flex gap-2 flex-wrap">
-          <Button
-            variant={!selectedGrade ? 'primary' : 'outline'}
-            onClick={() => setSelectedGrade(null)}
-            
+  
+  if (filteredWords.length === 0) {
+    return (
+      <div className="p-4">
+        <div className="mb-4 flex flex-col sm:flex-row gap-2">
+          <input
+            type="text"
+            placeholder="Search words..."
+            className="p-2 border rounded flex-grow"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          
+          <select 
+            className="p-2 border rounded"
+            value={selectedGrade}
+            onChange={(e) => setSelectedGrade(e.target.value)}
           >
-            All Grades
-          </Button>
-          <Button
-            variant={selectedGrade === '1st' ? 'primary' : 'outline'}
-            onClick={() => setSelectedGrade('1st')}
-            
+            <option value="">All Levels</option>
+            <option value="A1">A1</option>
+            <option value="A2">A2</option>
+            <option value="B1">B1</option>
+            <option value="B2">B2</option>
+          </select>
+        </div>
+        
+        <div className="text-center py-10">
+          <p>No words found matching your criteria. Try adjusting your filters.</p>
+          <Button 
+            onClick={() => {
+              setSelectedGrade('');
+              setSearchTerm('');
+            }}
+            className="mt-4"
           >
-            1st Grade
-          </Button>
-          <Button
-            variant={selectedGrade === '2nd' ? 'primary' : 'outline'}
-            onClick={() => setSelectedGrade('2nd')}
-          >
-            2nd Grade
+            Clear Filters
           </Button>
         </div>
       </div>
-
-      {/* Results count */}
+    );
+  }
+  
+  return (
+    <div className="p-4">
+      <div className="mb-4 flex flex-col sm:flex-row gap-2">
+        <input
+          type="text"
+          placeholder="Search words..."
+          className="p-2 border rounded flex-grow"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        
+        <select 
+          className="p-2 border rounded"
+          value={selectedGrade}
+          onChange={(e) => setSelectedGrade(e.target.value)}
+        >
+          <option value="">All Levels</option>
+          <option value="A1">A1</option>
+          <option value="A2">A2</option>
+          <option value="B1">B1</option>
+          <option value="B2">B2</option>
+        </select>
+      </div>
       
-
-      {/* Word cards grid */}
-      {filteredWords.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredWords.map((word, index) => (
-            <div 
-              key={`${word.vietnamese}-${index}`} 
-              className="p-6 bg-white rounded-lg shadow-sm border border-white"
-            >
-              <div className="flex gap-2 mb-4">
-                <span 
-                  key={`${word.vietnamese}-${word.grade}-${index}`} 
-                  className="text-sm px-3 py-1 bg-lime-green rounded-full"
-                >
-                  {word.grade}
-                </span>
-                <span className="text-sm px-3 py-1 bg-lime-green rounded-full">
-                  {word.title}
-                </span>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <h2 className="text-xl font-bold mb-4">Word List ({filteredWords.length} words)</h2>
+          <div className="border rounded max-h-[70vh] overflow-y-auto">
+            {filteredWords.map((word) => (
+              <div 
+                key={word.id}
+                className={`p-3 border-b cursor-pointer transition hover:bg-gray-50 ${
+                  selectedWord?.id === word.id ? 'bg-blue-50' : ''
+                }`}
+                onClick={() => setSelectedWord(word)}
+              >
+                <p className="viet font-medium">{word.vietnamese}</p>
+                <p className="text-sm text-gray-600">{word.english}</p>
+                <div className="flex justify-between items-center mt-1">
+                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
+                    {word.grade}
+                  </span>
+                </div>
               </div>
-              
-              <h2 className="viet text-xl font-bold mb-2">
-                {word.vietnamese}
-              </h2>
-              <p className="text-gray-600 mb-4">
-                {word.english}
-              </p>
-              
-              <PracticeMode word={word.vietnamese} />
+            ))}
+          </div>
+        </div>
+        
+        <div className="md:pl-4">
+          {selectedWord ? (
+            <PracticeMode word={selectedWord} />
+          ) : (
+            <div className="bg-gray-50 p-6 rounded-lg text-center">
+              <p>Select a word from the list to practice pronunciation</p>
             </div>
-          ))}
+          )}
         </div>
-      ) : (
-        <div className="text-center py-8 text-gray-500">
-          No words found. Try adjusting your filters.
-        </div>
-      )}
+      </div>
     </div>
   );
 }
