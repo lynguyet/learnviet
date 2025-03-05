@@ -3,117 +3,129 @@ import { google } from 'googleapis';
 
 // This function handles GET requests to /api/words
 export async function GET(): Promise<NextResponse<{ words: WordEntry[] } | { error: string }>> {
+  console.log("API route called");
+  
   try {
-    console.log("API route called");
-    
-    // Check if Google credentials are properly configured
+    // Get credentials
     const credentials = {
       email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
       privateKey: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
       sheetId: process.env.GOOGLE_SHEET_ID
     };
 
-    // Log credential status (without revealing actual values)
-    console.log("Credential check:", {
+    // Check credentials status
+    console.log("Credentials check:", {
       hasEmail: !!credentials.email,
       hasPrivateKey: !!credentials.privateKey,
       hasSheetId: !!credentials.sheetId
     });
 
-    // If credentials are missing, return mock data
     if (!credentials.email || !credentials.privateKey || !credentials.sheetId) {
-      console.warn('Google credentials not found, returning mock data');
+      console.error("Missing required Google credentials");
       return NextResponse.json({
         words: [
-          {
-            id: 'mock1',
-            vietnamese: 'xin chào',
-            english: 'hello',
-            pronunciation: 'sin chow',
-            grade: 'A1',
-            example: 'Xin chào, bạn khỏe không?'
-          },
-          {
-            id: 'mock2',
-            vietnamese: 'cảm ơn',
-            english: 'thank you',
-            pronunciation: 'gahm uhn',
-            grade: 'A1',
-            example: 'Cảm ơn bạn rất nhiều!'
-          },
+          { id: 'mock1', vietnamese: 'xin chào', english: 'hello', grade: 'A1' },
+          { id: 'mock2', vietnamese: 'cảm ơn', english: 'thank you', grade: 'A1' }
         ],
-        source: 'mock'
+        source: 'mock',
+        reason: 'Missing credentials'
       });
     }
 
-    // Setup Google Sheets API
+    // Set up Google Sheets API
     try {
+      console.log("Creating JWT auth client...");
       const auth = new google.auth.JWT(
         credentials.email,
         undefined,
         credentials.privateKey,
-        ['https://www.googleapis.com/auth/spreadsheets']
+        ['https://www.googleapis.com/auth/spreadsheets.readonly']
       );
 
+      console.log("Initializing sheets client...");
       const sheets = google.sheets({ version: 'v4', auth });
       
-      console.log("Attempting to fetch from Google Sheet:", credentials.sheetId);
+      // List all sheets in the spreadsheet
+      console.log(`Accessing spreadsheet ${credentials.sheetId}...`);
+      const spreadsheet = await sheets.spreadsheets.get({
+        spreadsheetId: credentials.sheetId
+      });
       
+      console.log("Available sheets:", spreadsheet.data.sheets?.map(s => s.properties?.title));
+      
+      // Use the first sheet
+      const sheet = spreadsheet.data.sheets?.[0];
+      
+      if (!sheet || !sheet.properties?.title) {
+        throw new Error("Could not find any valid sheet");
+      }
+      
+      const sheetName = sheet.properties.title;
+      console.log(`Using sheet: ${sheetName}`);
+      
+      // Get the values from the sheet (including headers in row 1)
+      console.log(`Fetching data from ${sheetName}!A1:D`);
       const response = await sheets.spreadsheets.values.get({
         spreadsheetId: credentials.sheetId,
-        range: 'Words!A2:G', // Adjust based on your sheet structure
+        range: `${sheetName}!A1:D`
       });
 
       const rows = response.data.values || [];
-      console.log(`Fetched ${rows.length} rows from Google Sheet`);
+      console.log(`Found ${rows.length} rows of data (including header)`);
       
-      // Map the spreadsheet rows to your word objects
-      const words = rows.map((row, index) => ({
-        id: index.toString(),
-        vietnamese: row[0] || '',
-        english: row[1] || '',
-        pronunciation: row[2] || '',
-        grade: row[3] || '',
-        partOfSpeech: row[4] || '',
-        example: row[5] || '',
-        title: row[0] || '', // Use Vietnamese as title if needed
+      if (rows.length <= 1) {
+        console.log("No data found in sheet (only headers)");
+        return NextResponse.json({
+          words: [],
+          source: 'google_sheets',
+          count: 0,
+          message: 'No data found in sheet'
+        });
+      }
+      
+      // Skip header row and map the data
+      const words = rows.slice(1).map((row, index) => ({
+        id: `word_${index}`,
+        title: row[0] || '',      // Column A: Title
+        vietnamese: row[1] || '', // Column B: Vietnamese
+        english: row[2] || '',    // Column C: English
+        grade: row[3] || '',      // Column D: Grade
+        // Add placeholder for pronunciation for compatibility with UI
+        pronunciation: '' 
       }));
 
-      return NextResponse.json({ 
+      console.log(`Successfully processed ${words.length} words`);
+      return NextResponse.json({
         words,
         source: 'google_sheets',
         count: words.length
       });
+      
     } catch (googleError) {
-      console.error('Error accessing Google Sheets:', googleError);
-      throw new Error(`Google Sheets access error: ${googleError.message}`);
+      console.error("Google Sheets API error:", googleError);
+      
+      // Return detailed error for debugging
+      return NextResponse.json({
+        words: [
+          { id: 'error1', vietnamese: 'xin chào', english: 'hello', grade: 'A1' },
+          { id: 'error2', vietnamese: 'cảm ơn', english: 'thank you', grade: 'A1' }
+        ],
+        source: 'google_error',
+        error: googleError.message,
+        stack: googleError.stack
+      });
     }
     
   } catch (error) {
-    console.error('Error fetching data:', error);
+    console.error("General error in API route:", error);
     
-    // Return mock data on error with error information
     return NextResponse.json({
       words: [
-        {
-          id: 'error1',
-          vietnamese: 'xin chào',
-          english: 'hello',
-          pronunciation: 'sin chow',
-          grade: 'A1',
-          example: 'Xin chào, bạn khỏe không?'
-        },
-        {
-          id: 'error2',
-          vietnamese: 'cảm ơn',
-          english: 'thank you',
-          pronunciation: 'gahm uhn',
-          grade: 'A1',
-          example: 'Cảm ơn bạn rất nhiều!'
-        },
+        { id: 'error1', vietnamese: 'xin chào', english: 'hello', grade: 'A1' },
+        { id: 'error2', vietnamese: 'cảm ơn', english: 'thank you', grade: 'A1' }
       ],
-      error: `Error fetching data: ${error.message}`,
-      source: 'error_fallback'
+      source: 'general_error',
+      error: error.message
     });
   }
 }
