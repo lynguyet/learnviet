@@ -311,7 +311,7 @@ export default function PracticePage() {
               
               {/* Rest of your card content (recording UI) */}
               {isRecording === word.id && (
-                <div className="mb-4 p-2 bg-gray-50 rounded">
+                <div className="mb-4 p-2 bg-gray-50 rounded-full">
                   <p className="text-sm text-gray-500">Recording...</p>
                   <p>{transcript || "Listening..."}</p>
                 </div>
@@ -341,7 +341,7 @@ export default function PracticePage() {
               )}
               
               <button 
-                className={`px-4 py-2 rounded transition ${
+                className={`px-4 py-2 rounded-full transition ${
                   isRecording === word.id
                     ? 'bg-red-600 text-white hover:bg-red-700'
                     : 'bg-gray-900 text-white hover:bg-gray-800'
