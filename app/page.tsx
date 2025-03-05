@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+// If you're using Navigation directly in this file, add this import:
+// import Navigation from './components/Navigation';
 
 export default function Home() {
   const [scrollY, setScrollY] = useState(0);
@@ -17,13 +19,12 @@ export default function Home() {
   }, []);
 
   return (
-    <div 
-      className="min-h-screen relative overflow-hidden"
-      
-    >
+    <div className="min-h-screen relative overflow-hidden">
       {/* Content */}
       <div className="relative z-10">
-        <Navigation />
+        {/* Remove this line if it exists: */}
+        {/* <Navigation /> */}
+        
         <main className="container mx-auto px-4 min-h-[calc(100vh-4rem)] flex items-center justify-center">
           <div className="max-w-3xl mx-auto">
             <motion.div 
