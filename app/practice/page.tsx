@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import Navigation from '../components/Navigation';
 import { WordEntry } from '@/app/lib/types';
 
 // Declare the SpeechRecognition type for TypeScript
@@ -211,7 +210,6 @@ export default function PracticePage() {
   if (loading) {
     return (
       <div className="min-h-screen">
-        <Navigation />
         <div className="container mx-auto px-4 py-8">
           <h1 className="text-3xl font-bold mb-8">Practice reading</h1>
           <div className="text-center py-10">Loading practice materials...</div>
@@ -223,7 +221,6 @@ export default function PracticePage() {
   if (error) {
     return (
       <div className="min-h-screen">
-        <Navigation />
         <div className="container mx-auto px-4 py-8">
           <h1 className="text-3xl font-bold mb-8">Practice reading</h1>
           <div className="text-center py-10 text-red-500">{error}</div>
@@ -237,8 +234,6 @@ export default function PracticePage() {
   
   return (
     <div className="min-h-screen">
-      <Navigation />
-      
       <main className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">Practice reading</h1>
         <p className="mb-6">Start recording and our system will analyze your reading skill</p>
