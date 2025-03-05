@@ -26,6 +26,9 @@ export default function PracticePage() {
   // Reference to the speech recognition object
   const recognitionRef = useRef<any>(null);
   
+  // Add this to your existing state declarations
+  const [expandedTranslations, setExpandedTranslations] = useState<{[key: string]: boolean}>({});
+  
   useEffect(() => {
     async function fetchWords() {
       try {
@@ -187,6 +190,24 @@ export default function PracticePage() {
     ? words.filter(word => selectedGrade === 'All' || word.grade === selectedGrade)
     : [];
   
+  // Add a toggle function
+  const toggleTranslation = (wordId: string) => {
+    setExpandedTranslations(prev => ({
+      ...prev,
+      [wordId]: !prev[wordId]
+    }));
+  };
+  
+  // Add this to your useEffect
+  useEffect(() => {
+    // Initialize some cards as expanded (e.g., the first card)
+    if (words.length > 0) {
+      setExpandedTranslations({
+        [words[0].id]: true  // First card expanded
+      });
+    }
+  }, [words]);
+  
   if (loading) {
     return (
       <div className="min-h-screen">
@@ -248,17 +269,47 @@ export default function PracticePage() {
                   {word.grade || '1st grade'}
                 </span>
                 <span className="bg-gray-100 text-xs px-2 py-1 rounded">
-                  Greetings
+                  {word.title || 'Greetings'}
                 </span>
               </div>
               
               <h3 className="text-lg viet mb-1">{word.vietnamese}</h3>
+              
+              {/* Collapsible English translation - Enhanced version */}
               <div className="mb-4">
-                <div>English: {word.english}</div>
-                {word.pronunciation && <div>{word.pronunciation}</div>}
+                <button 
+                  onClick={() => toggleTranslation(word.id)}
+                  className="flex items-center text-gray-700 hover:text-gray-900 focus:outline-none"
+                  aria-expanded={expandedTranslations[word.id]}
+                >
+                  <span>English</span>
+                  <svg 
+                    className={`ml-1 w-4 h-4 transition-transform duration-200 ${expandedTranslations[word.id] ? 'transform rotate-180' : ''}`} 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                <div 
+                  className={`overflow-hidden transition-all duration-300 ${
+                    expandedTranslations[word.id] 
+                      ? 'max-h-20 opacity-100 mt-1' 
+                      : 'max-h-0 opacity-0'
+                  }`}
+                >
+                  <div className="text-gray-700">
+                    {word.english}
+                    {word.pronunciation && (
+                      <div className="text-sm text-gray-500 mt-1">{word.pronunciation}</div>
+                    )}
+                  </div>
+                </div>
               </div>
               
-              {/* Display transcript during recording */}
+              {/* Rest of your card content (recording UI) */}
               {isRecording === word.id && (
                 <div className="mb-4 p-2 bg-gray-50 rounded">
                   <p className="text-sm text-gray-500">Recording...</p>

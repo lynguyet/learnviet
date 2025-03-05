@@ -47,3 +47,14 @@
   }
 }
 
+/* Add these styles for smooth transitions */
+.translation-container {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+}
+
+.translation-container.expanded {
+  max-height: 200px; /* Adjust based on your content */
+}
+
