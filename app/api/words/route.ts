@@ -6,21 +6,19 @@ export async function GET(): Promise<NextResponse<{ words: WordEntry[] } | { err
   console.log("API route called");
   
   try {
-    // Get credentials
-    const credentials = {
-      email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      privateKey: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      sheetId: process.env.GOOGLE_SHEET_ID
-    };
+    // Get and properly format credentials
+    const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+    const privateKeyInput = process.env.GOOGLE_PRIVATE_KEY;
+    const sheetId = process.env.GOOGLE_SHEET_ID;
 
     // Check credentials status
     console.log("Credentials check:", {
-      hasEmail: !!credentials.email,
-      hasPrivateKey: !!credentials.privateKey,
-      hasSheetId: !!credentials.sheetId
+      hasEmail: !!email,
+      hasPrivateKey: !!privateKeyInput,
+      hasSheetId: !!sheetId
     });
 
-    if (!credentials.email || !credentials.privateKey || !credentials.sheetId) {
+    if (!email || !privateKeyInput || !sheetId) {
       console.error("Missing required Google credentials");
       return NextResponse.json({
         words: [
@@ -32,23 +30,38 @@ export async function GET(): Promise<NextResponse<{ words: WordEntry[] } | { err
       });
     }
 
+    // Handle private key formatting properly
+    let privateKey = privateKeyInput;
+    
+    // Fix common private key formatting issues
+    if (!privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
+      privateKey = `-----BEGIN PRIVATE KEY-----\n${privateKey}\n-----END PRIVATE KEY-----\n`;
+    }
+    
+    // Fix newlines in the private key
+    privateKey = privateKey
+      .replace(/\\n/g, '\n')
+      .replace(/\n+/g, '\n')  // Normalize multiple newlines
+      .trim();
+    
+    console.log("Private key starts with:", privateKey.substring(0, 27) + "...");
+
     // Set up Google Sheets API
     try {
       console.log("Creating JWT auth client...");
-      const auth = new google.auth.JWT(
-        credentials.email,
-        undefined,
-        credentials.privateKey,
-        ['https://www.googleapis.com/auth/spreadsheets.readonly']
-      );
+      const auth = new google.auth.JWT({
+        email: email,
+        key: privateKey,
+        scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly']
+      });
 
       console.log("Initializing sheets client...");
       const sheets = google.sheets({ version: 'v4', auth });
       
       // List all sheets in the spreadsheet
-      console.log(`Accessing spreadsheet ${credentials.sheetId}...`);
+      console.log(`Accessing spreadsheet ${sheetId}...`);
       const spreadsheet = await sheets.spreadsheets.get({
-        spreadsheetId: credentials.sheetId
+        spreadsheetId: sheetId
       });
       
       console.log("Available sheets:", spreadsheet.data.sheets?.map(s => s.properties?.title));
@@ -66,7 +79,7 @@ export async function GET(): Promise<NextResponse<{ words: WordEntry[] } | { err
       // Get the values from the sheet (including headers in row 1)
       console.log(`Fetching data from ${sheetName}!A1:D`);
       const response = await sheets.spreadsheets.values.get({
-        spreadsheetId: credentials.sheetId,
+        spreadsheetId: sheetId,
         range: `${sheetName}!A1:D`
       });
 
