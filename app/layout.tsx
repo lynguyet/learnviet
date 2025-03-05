@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { DM_Serif_Display, Be_Vietnam_Pro } from 'next/font/google'
+import Navigation from './components/Navigation';
 
 const dmSerif = DM_Serif_Display({
   weight: '400',
@@ -22,13 +23,16 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en" className={`${dmSerif.variable} ${beVietnamPro.variable} antialiased`}>
       <body className={`${beVietnamPro.className} min-h-screen bg-[#f6f6ea80]`}>
-        {children}
+        <Navigation />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {children}
+        </main>
       </body>
     </html>
   );

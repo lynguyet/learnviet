@@ -250,7 +250,7 @@ export default function PracticePage() {
               key={grade}
               className={`rounded-full py-2 px-4 ${
                 selectedGrade === grade 
-                  ? 'bg-gray-800 text-white' 
+                  ? 'bg-primary text-white' 
                   : 'bg-white border'
               }`}
               onClick={() => setSelectedGrade(grade)}
@@ -343,8 +343,8 @@ export default function PracticePage() {
               <button 
                 className={`px-4 py-2 rounded-full transition ${
                   isRecording === word.id
-                    ? 'bg-red-600 text-white hover:bg-red-700'
-                    : 'bg-gray-900 text-white hover:bg-gray-800'
+                    ? 'bg-primary text-white hover:bg-gray-800'
+                    : 'bg-primary text-white hover:bg-gray-800'
                 }`}
                 onClick={() => toggleRecording(word.id, word.vietnamese)}
               >
