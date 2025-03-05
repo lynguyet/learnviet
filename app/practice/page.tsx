@@ -258,12 +258,15 @@ export default function PracticePage() {
         {/* Practice cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {filteredWords.map(word => (
-            <div key={word.id} className="border rounded p-4">
+            <div 
+              key={word.id} 
+              className="border rounded-lg p-6 bg-white shadow-md"
+            >
               <div className="flex gap-2 mb-2">
-                <span className="bg-gray-100 text-xs px-2 py-1 rounded">
+                <span className="bg-lime-green text-xs px-2 py-1 rounded">
                   {word.grade || '1st grade'}
                 </span>
-                <span className="bg-gray-100 text-xs px-2 py-1 rounded">
+                <span className="bg-lime-green text-xs px-2 py-1 rounded">
                   {word.title || 'Greetings'}
                 </span>
               </div>
