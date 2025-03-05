@@ -1,6 +1,5 @@
 'use client';
 
-import Navigation from '../components/Navigation';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
@@ -55,8 +54,6 @@ export default function LibraryPage() {
 
   return (
     <div className="min-h-screen">
-      <Navigation />
-      
       <main className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">Lesson Library</h1>
         
