@@ -29,23 +29,30 @@ export default function PracticePage() {
   useEffect(() => {
     async function fetchWords() {
       try {
+        console.log("Fetching words from API...");
         const response = await fetch('/api/words');
+        
         if (!response.ok) {
           throw new Error(`Failed to fetch words: ${response.status}`);
         }
+        
         const data = await response.json();
+        console.log("API response:", data);
         
         // Handle both possible data formats
-        const wordsArray = Array.isArray(data) ? data : (data.words || []);
-        
-        // Ensure we have a valid array of words
-        if (!Array.isArray(wordsArray)) {
-          console.error('Expected array of words but got:', wordsArray);
-          setWords([]);
+        let wordsArray;
+        if (Array.isArray(data)) {
+          wordsArray = data;
+        } else if (data.words && Array.isArray(data.words)) {
+          wordsArray = data.words;
         } else {
-          setWords(wordsArray);
+          console.error('Unexpected data format:', data);
+          wordsArray = [];
         }
-      } catch (err: any) {
+        
+        console.log("Processed words array:", wordsArray);
+        setWords(wordsArray);
+      } catch (err) {
         console.error('Error fetching words:', err);
         setError(err.message || 'Failed to load words');
         setWords([]); // Ensure words is always an array
@@ -301,6 +308,20 @@ export default function PracticePage() {
             <p>No practice materials found for the selected criteria.</p>
           </div>
         )}
+        
+        <div className="bg-gray-100 p-4 mb-4 rounded">
+          <h3 className="font-bold">Debug Info:</h3>
+          <p>Words loaded: {words.length}</p>
+          <p>Data source: {Array.isArray(words) ? 'Direct array' : words.source || 'Unknown'}</p>
+          <p>Loading: {loading ? 'Yes' : 'No'}</p>
+          <p>Error: {error || 'None'}</p>
+          <details>
+            <summary>First 2 words data</summary>
+            <pre className="text-xs mt-2">
+              {JSON.stringify(words.slice(0, 2), null, 2)}
+            </pre>
+          </details>
+        </div>
       </main>
     </div>
   );
