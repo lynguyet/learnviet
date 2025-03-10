@@ -120,13 +120,11 @@ export default function PracticeMode({ word }: PracticeModeProps) {
         const transcript = event.results[0][0].transcript.toLowerCase();
         setTranscribedText(transcript);
         
-        // Simple comparison - you might want to implement a more sophisticated comparison
+        // Get the target text
         const targetText = word.vietnamese.toLowerCase();
         
-        // Calculate simple accuracy percentage
-        const levenshteinDistance = calculateLevenshteinDistance(transcript, targetText);
-        const maxLength = Math.max(transcript.length, targetText.length);
-        const calculatedAccuracy = Math.max(0, 100 - Math.round((levenshteinDistance / maxLength) * 100));
+        // Calculate word-based accuracy
+        const calculatedAccuracy = calculateWordAccuracy(transcript, targetText);
         
         setAccuracy(calculatedAccuracy);
         setShowEvaluation(true);
@@ -160,7 +158,16 @@ export default function PracticeMode({ word }: PracticeModeProps) {
     }
   };
   
-  // Levenshtein distance for comparing strings
+  // Add this new helper function above the calculateLevenshteinDistance function:
+  const normalizeText = (text: string): string => {
+    // Remove punctuation and normalize spaces
+    return text
+      .replace(/[.,\/#!?$%\^&\*;:{}=\-_`~()]/g, "")  // Remove punctuation
+      .replace(/\s+/g, " ")                          // Normalize spaces
+      .trim();                                       // Trim leading/trailing spaces
+  };
+
+  // Existing Levenshtein distance function remains unchanged
   const calculateLevenshteinDistance = (a: string, b: string): number => {
     const matrix = Array(b.length + 1).fill(null).map(() => Array(a.length + 1).fill(null));
     
@@ -184,6 +191,36 @@ export default function PracticeMode({ word }: PracticeModeProps) {
     }
     
     return matrix[b.length][a.length];
+  };
+
+  // Add this new function for word-based accuracy
+  const calculateWordAccuracy = (spoken: string, target: string): number => {
+    // Normalize and split into words
+    const normalizeAndSplit = (text: string) => {
+      return text
+        .replace(/[.,\/#!?$%\^&\*;:{}=\-_`~()]/g, "")
+        .toLowerCase()
+        .trim()
+        .split(/\s+/);
+    };
+    
+    const spokenWords = normalizeAndSplit(spoken);
+    const targetWords = normalizeAndSplit(target);
+    
+    // Count matching words
+    let matchCount = 0;
+    for (const word of spokenWords) {
+      if (targetWords.includes(word)) {
+        matchCount++;
+        // Remove the matched word to prevent double counting
+        const index = targetWords.indexOf(word);
+        targetWords.splice(index, 1);
+      }
+    }
+    
+    // Calculate accuracy based on the total number of words
+    const totalUniqueWords = new Set([...normalizeAndSplit(spoken), ...normalizeAndSplit(target)]).size;
+    return Math.round((matchCount / Math.max(spokenWords.length, normalizeAndSplit(target).length)) * 100);
   };
 
   // If browser support hasn't been checked yet
