@@ -70,14 +70,16 @@ interface PracticeModeProps {
 }
 
 export default function PracticeMode({ word }: PracticeModeProps) {
+  console.log('PracticeMode rendering with word:', word);
   const [isRecording, setIsRecording] = useState(false);
   const [transcribedText, setTranscribedText] = useState('');
   const [accuracy, setAccuracy] = useState(0);
   const [showEvaluation, setShowEvaluation] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [browserSupport, setBrowserSupport] = useState<boolean | null>(null);
-  const [wordErrors, setWordErrors] = useState<{[key: string]: boolean}>({});
   const [wordComparison, setWordComparison] = useState<any[]>([]);
+  const [markedWords, setMarkedWords] = useState<{text: string, isCorrect: boolean}[]>([]);
+  const [missingWords, setMissingWords] = useState<string[]>([]);
   
   const recognitionRef = useRef<any>(null);
 
@@ -98,6 +100,8 @@ export default function PracticeMode({ word }: PracticeModeProps) {
     setTranscribedText('');
     setAccuracy(0);
     setShowEvaluation(false);
+    setWordComparison([]);
+    setMissingWords([]);
     
     try {
       if (typeof window === 'undefined') {
@@ -120,20 +124,40 @@ export default function PracticeMode({ word }: PracticeModeProps) {
       recognition.onresult = (event: any) => {
         console.log('Got speech result', event);
         const transcript = event.results[0][0].transcript.toLowerCase();
+        console.log('Transcript:', transcript);
+        
         setTranscribedText(transcript);
         
         // Get the target text
         const targetText = word.vietnamese.toLowerCase();
+        console.log('Target text:', targetText);
         
-        // Compare words
-        const wordComparison = compareWords(transcript, targetText);
+        // Log the words
+        console.log('Spoken words:', transcript.split(/\s+/));
+        console.log('Target words:', targetText.split(/\s+/));
+        
+        // Split into words
+        const targetWords = targetText.split(/\s+/);
+        const spokenWords = transcript.split(/\s+/);
+        
+        // Mark each spoken word as correct or incorrect
+        const markedWords = spokenWords.map(word => ({
+          text: word,
+          isCorrect: targetWords.includes(word)
+        }));
         
         // Calculate accuracy
-        const correctWords = wordComparison.filter(item => item.correct).length;
-        const totalWords = wordComparison.length;
-        const calculatedAccuracy = Math.round((correctWords / totalWords) * 100);
+        const correctWords = markedWords.filter(w => w.isCorrect).length;
+        const calculatedAccuracy = Math.round((correctWords / targetWords.length) * 100);
         
-        setWordComparison(wordComparison);
+        // Find missing words
+        const missing = targetWords.filter(word => !spokenWords.includes(word));
+        
+        setMarkedWords(markedWords);
+        console.log('Marked words set:', markedWords);
+        
+        setMissingWords(missing);
+        console.log('Missing words set:', missing);
         setAccuracy(calculatedAccuracy);
         setShowEvaluation(true);
       };
@@ -270,7 +294,7 @@ export default function PracticeMode({ word }: PracticeModeProps) {
     return errors;
   };
 
-  // Add this improved function for better word comparison
+  // Enhanced word comparison function
   const compareWords = (spoken: string, target: string) => {
     // Normalize and split into words
     const normalizeAndSplit = (text: string) => {
@@ -283,6 +307,8 @@ export default function PracticeMode({ word }: PracticeModeProps) {
     
     const spokenWords = normalizeAndSplit(spoken);
     const targetWords = normalizeAndSplit(target);
+    
+    console.log('Comparing:', { spokenWords, targetWords });
     
     // Use Levenshtein distance for word sequences
     const wordMatrix = Array(targetWords.length + 1).fill(null)
@@ -320,7 +346,8 @@ export default function PracticeMode({ word }: PracticeModeProps) {
         alignment.unshift({
           target: targetWords[i - 1],
           spoken: spokenWords[j - 1],
-          correct: targetWords[i - 1] === spokenWords[j - 1]
+          correct: targetWords[i - 1] === spokenWords[j - 1],
+          type: targetWords[i - 1] === spokenWords[j - 1] ? 'correct' : 'mispronounced'
         });
         i--;
         j--;
@@ -329,7 +356,8 @@ export default function PracticeMode({ word }: PracticeModeProps) {
         alignment.unshift({
           target: null,
           spoken: spokenWords[j - 1],
-          correct: false
+          correct: false,
+          type: 'extra'
         });
         j--;
       } else {
@@ -337,7 +365,8 @@ export default function PracticeMode({ word }: PracticeModeProps) {
         alignment.unshift({
           target: targetWords[i - 1],
           spoken: null,
-          correct: false
+          correct: false,
+          type: 'missing'
         });
         i--;
       }
@@ -403,23 +432,32 @@ export default function PracticeMode({ word }: PracticeModeProps) {
             <>
               <p className="viet mt-2">
                 You said: {' '}
-                {wordComparison.map((item, index) => (
-                  <span key={index}>
-                    {item.spoken && (
-                      <span 
-                        className={!item.correct ? 'text-red-500 font-medium' : ''}
-                      >
-                        {item.spoken}{' '}
-                      </span>
-                    )}
+                {markedWords.map((word, index) => (
+                  <span 
+                    key={index} 
+                    style={{ color: word.isCorrect ? 'inherit' : 'red', fontWeight: word.isCorrect ? 'normal' : 'medium' }}
+                  >
+                    {word.text}{' '}
                   </span>
                 ))}
               </p>
+              
+              {missingWords.length > 0 && (
+                <p className="text-sm text-red-500 mt-1">
+                  Missing: {missingWords.join(' ')}
+                </p>
+              )}
+              
               <p className="mt-2">
-                <span className="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full">
+                <span className={`inline-block px-3 py-1 rounded-full ${
+                  accuracy >= 80 ? 'bg-green-100 text-green-800' : 
+                  accuracy >= 50 ? 'bg-yellow-100 text-yellow-800' : 
+                  'bg-red-100 text-red-800'
+                }`}>
                   Score: {accuracy}%
                 </span>
               </p>
+              
               <p className="text-sm text-gray-800 mt-1">
                 {accuracy === 100
                   ? "Perfect! Your pronunciation is excellent."
