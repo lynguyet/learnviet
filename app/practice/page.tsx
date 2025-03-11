@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { WordEntry } from '@/app/lib/types';
 
+
 // Declare the SpeechRecognition type for TypeScript
 declare global {
   interface Window {
@@ -207,6 +208,83 @@ export default function PracticePage() {
     }
   }, [words]);
   
+  // Update this function to better highlight missing words and errors
+  const highlightErrors = (original: string, transcript: string): JSX.Element => {
+    // Normalize both strings
+    const normalizeText = (text: string) => {
+      return text.toLowerCase()
+        .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '')
+        .trim();
+    };
+    
+    const originalNormalized = normalizeText(original);
+    const transcriptNormalized = normalizeText(transcript);
+    
+    const originalWords = originalNormalized.split(' ');
+    const transcriptWords = transcriptNormalized.split(' ');
+    
+    // If the transcript is shorter than the original, we need to show what's missing
+    if (transcriptWords.length < originalWords.length) {
+      // Show what was said, then indicate missing words
+      return (
+        <>
+          {transcriptWords.map((word, index) => {
+            // Check if the word is misspelled
+            if (normalizeText(word) !== normalizeText(originalWords[index])) {
+              return (
+                <span key={index}>
+                  {index > 0 ? ' ' : ''}
+                  <span className="text-red-500">{word}</span>
+                  <span className="text-gray-400 text-xs">
+                    ({originalWords[index]})
+                  </span>
+                </span>
+              );
+            }
+            return <span key={index}>{index > 0 ? ' ' : ''}{word}</span>;
+          })}
+          <span className="text-gray-400 italic">
+            {' '}(missing: {originalWords.slice(transcriptWords.length).join(' ')})
+          </span>
+        </>
+      );
+    }
+    
+    // If transcript has all words but some are wrong or has extra words
+    return (
+      <>
+        {transcriptWords.map((word, index) => {
+          // If we're beyond the original text length
+          if (index >= originalWords.length) {
+            return (
+              <span key={index}>
+                {' '}
+                <span className="text-red">{word}</span>
+                <span className="text-black">(extra)</span>
+              </span>
+            );
+          }
+          
+          // If the word matches
+          if (normalizeText(word) === normalizeText(originalWords[index])) {
+            return <span key={index}>{index > 0 ? ' ' : ''}{word}</span>;
+          }
+          
+          // Word doesn't match - highlight it
+          return (
+            <span key={index}>
+              {index > 0 ? ' ' : ''}
+              <span className="text-red">{word}</span>
+              <span className="text-black">
+                ({originalWords[index]})
+              </span>
+            </span>
+          );
+        })}
+      </>
+    );
+  };
+  
   if (loading) {
     return (
       <div className="min-h-screen">
@@ -255,32 +333,32 @@ export default function PracticePage() {
           ))}
         </div>
         
-        {/* Practice cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Practice cards - Updated design */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredWords.map(word => (
             <div 
               key={word.id} 
               className="border rounded-lg p-6 bg-white shadow-md"
             >
               <div className="flex gap-2 mb-2">
-                <span className="bg-lime-green text-xs px-2 py-1 rounded">
+                <span className="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full">
                   {word.grade || '1st grade'}
                 </span>
-                <span className="bg-lime-green text-xs px-2 py-1 rounded">
+                <span className="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full">
                   {word.title || 'Greetings'}
                 </span>
               </div>
               
-              <h3 className="text-lg viet mb-1">{word.vietnamese}</h3>
+              <h4 className="text-2xl viet mb-4">{word.vietnamese}</h4>
               
-              {/* Collapsible English translation - Enhanced version */}
+              {/* Collapsible English translation - Simplified */}
               <div className="mb-4">
                 <button 
                   onClick={() => toggleTranslation(word.id)}
                   className="flex items-center text-gray-700 hover:text-gray-900 focus:outline-none"
                   aria-expanded={expandedTranslations[word.id]}
                 >
-                  <span>English</span>
+                  <span className="text-lg">English</span>
                   <svg 
                     className={`ml-1 w-4 h-4 transition-transform duration-200 ${expandedTranslations[word.id] ? 'transform rotate-180' : ''}`} 
                     fill="none" 
@@ -294,34 +372,26 @@ export default function PracticePage() {
                 <div 
                   className={`overflow-hidden transition-all duration-300 ${
                     expandedTranslations[word.id] 
-                      ? 'max-h-20 opacity-100 mt-1' 
+                      ? 'max-h-20 opacity-100 mt-2' 
                       : 'max-h-0 opacity-0'
                   }`}
                 >
                   <div className="text-gray-700">
                     {word.english}
                     {word.pronunciation && (
-                      <div className="text-sm text-gray-500 mt-1">{word.pronunciation}</div>
+                      <div className="text-black mt-1">{word.pronunciation}</div>
                     )}
                   </div>
                 </div>
               </div>
               
-              {/* Rest of your card content (recording UI) */}
-              {isRecording === word.id && (
-                <div className="mb-4 p-2 bg-gray-50 rounded-full">
-                  <p className="text-sm text-gray-500">Recording...</p>
-                  <p>{transcript || "Listening..."}</p>
-                </div>
-              )}
-              
               {/* Display results after recording */}
               {results[word.id] && !isRecording && (
                 <div className="mb-4">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold">Score:</span> 
+                  <div className="mb-2">
+                    <span className="font-bold">Score: </span>
                     <span 
-                      className={`px-2 py-1 rounded ${
+                      className={`px-3 py-1 rounded-full ${
                         results[word.id].score > 80 
                           ? 'bg-green-100 text-green-800' 
                           : results[word.id].score > 50 
@@ -332,16 +402,24 @@ export default function PracticePage() {
                       {results[word.id].score}%
                     </span>
                   </div>
-                  <p className="text-sm text-gray-500 mt-1">
-                    You said: "{results[word.id].transcript}"
+                  <p className="text-gray-700">
+                    You said: {highlightErrors(word.vietnamese, results[word.id].transcript)}
                   </p>
                 </div>
               )}
               
+              {/* Recording UI */}
+              {isRecording === word.id && (
+                <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-500 mb-1">Recording...</p>
+                  <p>{transcript || "Listening..."}</p>
+                </div>
+              )}
+              
               <button 
-                className={`px-4 py-2 rounded-full transition ${
+                className={`w-full px-4 py-3 rounded-full transition text-center ${
                   isRecording === word.id
-                    ? 'bg-primary text-white hover:bg-gray-800'
+                    ? 'bg-red-600 text-white hover:bg-red-700'
                     : 'bg-primary text-white hover:bg-gray-800'
                 }`}
                 onClick={() => toggleRecording(word.id, word.vietnamese)}

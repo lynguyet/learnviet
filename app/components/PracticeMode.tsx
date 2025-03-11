@@ -435,7 +435,7 @@ export default function PracticeMode({ word }: PracticeModeProps) {
                 {markedWords.map((word, index) => (
                   <span 
                     key={index} 
-                    style={{ color: word.isCorrect ? 'inherit' : 'red', fontWeight: word.isCorrect ? 'normal' : 'medium' }}
+                    className={!word.isCorrect ? 'text-red-500 font-medium' : ''}
                   >
                     {word.text}{' '}
                   </span>
