@@ -234,7 +234,7 @@ export default function PracticePage() {
               return (
                 <span key={index}>
                   {index > 0 ? ' ' : ''}
-                  <span className="text-red">{word}</span>
+                  <span className="text-red-600">{word}</span>
                   <span className="text-black">
                     ({originalWords[index]})
                   </span>
@@ -259,7 +259,7 @@ export default function PracticePage() {
             return (
               <span key={index}>
                 {' '}
-                <span className="text-red">{word}</span>
+                <span className="text--600">{word}</span>
                 <span className="text-black">(extra)</span>
               </span>
             );
@@ -274,7 +274,7 @@ export default function PracticePage() {
           return (
             <span key={index}>
               {index > 0 ? ' ' : ''}
-              <span className="text-red">{word}</span>
+              <span className="text-red-600">{word}</span>
               <span className="text-black">
                 ({originalWords[index]})
               </span>
@@ -301,7 +301,7 @@ export default function PracticePage() {
       <div className="min-h-screen">
         <div className="container mx-auto px-4 py-8">
           <h1 className="text-3xl font-bold mb-8">Practice reading</h1>
-          <div className="text-center py-10 text-red-500">{error}</div>
+          <div className="text-center py-10 text-red-600">{error}</div>
         </div>
       </div>
     );
