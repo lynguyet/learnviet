@@ -243,7 +243,7 @@ export default function PracticePage() {
             }
             return <span key={index}>{index > 0 ? ' ' : ''}{word}</span>;
           })}
-          <span className="text-black italic">
+          <span className="text-red-600 font-bold">
             {' '}(missing: {originalWords.slice(transcriptWords.length).join(' ')})
           </span>
         </>
