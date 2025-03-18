@@ -114,13 +114,16 @@ export default function PracticePage() {
       // Compare transcript with original text
       const similarity = calculateSimilarity(transcript, vietnamese);
       
+      // Use the highlightErrors function to get wrong words
+      const { wrongWords } = highlightErrors(vietnamese, transcript);
+      
       // Store results
       setResults(prev => ({
         ...prev,
         [wordId]: {
           score: similarity,
           transcript: transcript,
-          wrongWords: calculateWrongWords(vietnamese, transcript)
+          wrongWords: wrongWords
         }
       }));
       
