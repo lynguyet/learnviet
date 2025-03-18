@@ -21,7 +21,13 @@ export default function PracticePage() {
   // Speech recognition states
   const [isRecording, setIsRecording] = useState<string | null>(null);
   const [transcript, setTranscript] = useState<string>('');
-  const [results, setResults] = useState<{[key: string]: {score: number, transcript: string}}>({});
+  const [results, setResults] = useState<{
+    [key: string]: {
+      score: number, 
+      transcript: string,
+      wrongWords?: string[]
+    }
+  }>({});
   
   // Reference to the speech recognition object
   const recognitionRef = useRef<any>(null);
@@ -113,7 +119,8 @@ export default function PracticePage() {
         ...prev,
         [wordId]: {
           score: similarity,
-          transcript: transcript
+          transcript: transcript,
+          wrongWords: calculateWrongWords(vietnamese, transcript)
         }
       }));
       
@@ -208,8 +215,11 @@ export default function PracticePage() {
     }
   }, [words]);
   
-  // Update this function to better highlight missing words and errors
-  const highlightErrors = (original: string, transcript: string): JSX.Element => {
+  // Update this function to identify wrong or missed words
+  const highlightErrors = (original: string, transcript: string): { 
+    displayText: JSX.Element, 
+    wrongWords: string[] 
+  } => {
     // Normalize both strings
     const normalizeText = (text: string) => {
       return text.toLowerCase()
@@ -223,66 +233,21 @@ export default function PracticePage() {
     const originalWords = originalNormalized.split(' ');
     const transcriptWords = transcriptNormalized.split(' ');
     
-    // If the transcript is shorter than the original, we need to show what's missing
-    if (transcriptWords.length < originalWords.length) {
-      // Show what was said, then indicate missing words
-      return (
-        <>
-          {transcriptWords.map((word, index) => {
-            // Check if the word is misspelled
-            if (normalizeText(word) !== normalizeText(originalWords[index])) {
-              return (
-                <span key={index}>
-                  {index > 0 ? ' ' : ''}
-                  <span className="text-red-600">{word}</span>
-                  <span className="text-black">
-                    ({originalWords[index]})
-                  </span>
-                </span>
-              );
-            }
-            return <span key={index}>{index > 0 ? ' ' : ''}{word}</span>;
-          })}
-          <span className="text-red-600 font-bold">
-            {' '}(missing: {originalWords.slice(transcriptWords.length).join(' ')})
-          </span>
-        </>
-      );
-    }
+    // Track wrong or missed words
+    const wrongWords: string[] = [];
     
-    // If transcript has all words but some are wrong or has extra words
-    return (
-      <>
-        {transcriptWords.map((word, index) => {
-          // If we're beyond the original text length
-          if (index >= originalWords.length) {
-            return (
-              <span key={index}>
-                {' '}
-                <span className="text--600">{word}</span>
-                <span className="text-black">(extra)</span>
-              </span>
-            );
-          }
-          
-          // If the word matches
-          if (normalizeText(word) === normalizeText(originalWords[index])) {
-            return <span key={index}>{index > 0 ? ' ' : ''}{word}</span>;
-          }
-          
-          // Word doesn't match - highlight it
-          return (
-            <span key={index}>
-              {index > 0 ? ' ' : ''}
-              <span className="text-red-600">{word}</span>
-              <span className="text-black">
-                ({originalWords[index]})
-              </span>
-            </span>
-          );
-        })}
-      </>
-    );
+    // Find words that were wrong or missed
+    originalWords.forEach((word, index) => {
+      if (index >= transcriptWords.length || normalizeText(transcriptWords[index]) !== word) {
+        wrongWords.push(word);
+      }
+    });
+    
+    // Just return the transcript as is for display
+    return {
+      displayText: <>{transcript}</>,
+      wrongWords
+    };
   };
   
   if (loading) {
@@ -388,10 +353,10 @@ export default function PracticePage() {
               {/* Display results after recording */}
               {results[word.id] && !isRecording && (
                 <div className="mb-4">
-                  <div className="mb-2">
-                    <span className="font-bold">Score: </span>
+                  <div className="flex items-baseline gap-2 mb-2">
+                    <span className="text-xl font-medium">Score</span>
                     <span 
-                      className={`px-3 py-1 rounded-full ${
+                      className={`px-4 py-1 rounded-full text-lg ${
                         results[word.id].score > 80 
                           ? 'bg-green-100 text-green-800' 
                           : results[word.id].score > 50 
@@ -402,9 +367,17 @@ export default function PracticePage() {
                       {results[word.id].score}%
                     </span>
                   </div>
-                  <p className="text-gray-700">
-                    You said: {highlightErrors(word.vietnamese, results[word.id].transcript)}
+                  
+                  <p className="text-gray-700 mb-2">
+                    <span className="font-medium">You said:</span> {results[word.id].transcript}
                   </p>
+                  
+                  {/* Show wrong words summary */}
+                  {results[word.id].wrongWords && results[word.id].wrongWords.length > 0 && (
+                    <p className="text-gray-700">
+                      <span className="font-medium">Words you got wrong or missed:</span> {results[word.id].wrongWords.join(', ')}
+                    </p>
+                  )}
                 </div>
               )}
               
