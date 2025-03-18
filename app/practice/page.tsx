@@ -25,7 +25,8 @@ export default function PracticePage() {
     [key: string]: {
       score: number, 
       transcript: string,
-      wrongWords?: string[]
+      mispronounced?: string[],
+      missed?: string[]
     }
   }>({});
   
@@ -115,7 +116,7 @@ export default function PracticePage() {
       const similarity = calculateSimilarity(transcript, vietnamese);
       
       // Use the highlightErrors function to get wrong words
-      const { wrongWords } = highlightErrors(vietnamese, transcript);
+      const { mispronounced, missed } = highlightErrors(vietnamese, transcript);
       
       // Store results
       setResults(prev => ({
@@ -123,7 +124,8 @@ export default function PracticePage() {
         [wordId]: {
           score: similarity,
           transcript: transcript,
-          wrongWords: wrongWords
+          mispronounced,
+          missed
         }
       }));
       
@@ -221,7 +223,8 @@ export default function PracticePage() {
   // Update this function to identify wrong or missed words
   const highlightErrors = (original: string, transcript: string): { 
     displayText: JSX.Element, 
-    wrongWords: string[] 
+    mispronounced: string[],
+    missed: string[] 
   } => {
     // Normalize both strings
     const normalizeText = (text: string) => {
@@ -236,20 +239,28 @@ export default function PracticePage() {
     const originalWords = originalNormalized.split(' ');
     const transcriptWords = transcriptNormalized.split(' ');
     
-    // Track wrong or missed words
-    const wrongWords: string[] = [];
+    // Track mispronounced and missed words
+    const mispronounced: string[] = [];
+    const missed: string[] = [];
     
-    // Find words that were wrong or missed
+    // Find words that were mispronounced or missed
     originalWords.forEach((word, index) => {
-      if (index >= transcriptWords.length || normalizeText(transcriptWords[index]) !== word) {
-        wrongWords.push(word);
+      if (index < transcriptWords.length) {
+        // Word exists in transcript but is different - mispronounced
+        if (normalizeText(transcriptWords[index]) !== word) {
+          mispronounced.push(word);
+        }
+      } else {
+        // Word doesn't exist in transcript - missed
+        missed.push(word);
       }
     });
     
     // Just return the transcript as is for display
     return {
       displayText: <>{transcript}</>,
-      wrongWords
+      mispronounced,
+      missed
     };
   };
   
@@ -375,10 +386,17 @@ export default function PracticePage() {
                     <span className="font-medium">You said:</span> {results[word.id].transcript}
                   </p>
                   
-                  {/* Show wrong words summary */}
-                  {results[word.id].wrongWords && results[word.id].wrongWords.length > 0 && (
+                  {/* Show mispronounced words */}
+                  {results[word.id].mispronounced && results[word.id].mispronounced.length > 0 && (
+                    <p className="text-gray-700 mb-2">
+                      <span className="font-medium">Words you mispronounced:</span> {results[word.id].mispronounced.join(', ')}
+                    </p>
+                  )}
+                  
+                  {/* Show missed words */}
+                  {results[word.id].missed && results[word.id].missed.length > 0 && (
                     <p className="text-gray-700">
-                      <span className="font-medium">Words you got wrong or missed:</span> {results[word.id].wrongWords.join(', ')}
+                      <span className="font-medium">Words you missed:</span> {results[word.id].missed.join(', ')}
                     </p>
                   )}
                 </div>
