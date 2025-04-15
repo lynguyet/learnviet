@@ -36,6 +36,9 @@ export default function PracticePage() {
   // Add this to your existing state declarations
   const [expandedTranslations, setExpandedTranslations] = useState<{[key: string]: boolean}>({});
   
+  // Add this new ref for the active card
+  const activeCardRef = useRef<HTMLDivElement | null>(null);
+  
   useEffect(() => {
     async function fetchWords() {
       try {
@@ -136,6 +139,13 @@ export default function PracticePage() {
       setTranscript('');
       recognitionRef.current.start();
       setIsRecording(wordId);
+      
+      // Scroll the active card into view
+      setTimeout(() => {
+        if (activeCardRef.current) {
+          activeCardRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
     }
   };
   
@@ -317,7 +327,10 @@ export default function PracticePage() {
           {filteredWords.map(word => (
             <div 
               key={word.id} 
-              className="border rounded-lg p-6 bg-white shadow-md"
+              className={`border rounded-lg p-6 bg-white shadow-md ${
+                isRecording === word.id ? 'sticky top-0 z-10' : ''
+              }`}
+              ref={isRecording === word.id ? activeCardRef : null}
             >
               <div className="flex gap-2 mb-2">
                 <span className="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full">
